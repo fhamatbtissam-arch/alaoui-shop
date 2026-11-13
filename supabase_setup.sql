@@ -1,0 +1,21 @@
+create extension if not exists pgcrypto;
+create table if not exists public.admin_users(user_id uuid primary key references auth.users(id) on delete cascade);
+create or replace function public.is_shop_admin() returns boolean language sql stable security definer set search_path=public as $$ select exists(select 1 from public.admin_users where user_id=auth.uid()); $$;
+create table if not exists public.shop_settings(id integer primary key default 1 check(id=1),whatsapp text default '',phone text default '',address text default '');
+insert into public.shop_settings(id) values(1) on conflict do nothing;
+create table if not exists public.products(id uuid primary key default gen_random_uuid(),name text not null,description text default '',price text default '',image_url text default '',active boolean default true,sort_order integer default 0,created_at timestamptz default now());
+create table if not exists public.gallery(id uuid primary key default gen_random_uuid(),image_url text not null,storage_path text,active boolean default true,created_at timestamptz default now());
+alter table public.admin_users enable row level security;alter table public.shop_settings enable row level security;alter table public.products enable row level security;alter table public.gallery enable row level security;
+create policy "admin own row" on public.admin_users for select to authenticated using(user_id=auth.uid());
+create policy "public settings" on public.shop_settings for select to anon,authenticated using(true);
+create policy "admin settings" on public.shop_settings for all to authenticated using(public.is_shop_admin()) with check(public.is_shop_admin());
+create policy "public products" on public.products for select to anon,authenticated using(active=true or public.is_shop_admin());
+create policy "admin products" on public.products for all to authenticated using(public.is_shop_admin()) with check(public.is_shop_admin());
+create policy "public gallery" on public.gallery for select to anon,authenticated using(active=true or public.is_shop_admin());
+create policy "admin gallery" on public.gallery for all to authenticated using(public.is_shop_admin()) with check(public.is_shop_admin());
+insert into storage.buckets(id,name,public) values('shop-images','shop-images',true) on conflict(id) do nothing;
+create policy "public images" on storage.objects for select to anon,authenticated using(bucket_id='shop-images');
+create policy "admin upload images" on storage.objects for insert to authenticated with check(bucket_id='shop-images' and public.is_shop_admin());
+create policy "admin delete images" on storage.objects for delete to authenticated using(bucket_id='shop-images' and public.is_shop_admin());
+-- بعد إنشاء مستخدم المدير في Authentication انسخ UUID ونفذ:
+-- insert into public.admin_users(user_id) values('UUID-HERE');
