@@ -3,6 +3,7 @@ const c=window.ALAOUI_CONFIG||{};
 const ready=!!(c.SUPABASE_URL&&c.SUPABASE_URL.startsWith("https://")&&c.SUPABASE_ANON_KEY&&c.SUPABASE_ANON_KEY.length>20);
 const db=ready?supabase.createClient(c.SUPABASE_URL,c.SUPABASE_ANON_KEY):null;
 const $=x=>document.getElementById(x);
+const esc=s=>String(s??"").replace(/[&<>"']/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[x]));
 
 async function init(){
   if(!db){$("msg").textContent="تحقق من إعدادات Supabase.";return;}
@@ -46,10 +47,7 @@ $("settingsform").onsubmit=async e=>{
     whatsapp:$("bookingphone").value.trim(),
     phone:$("orderphone").value.trim()
   }).eq("id",1);
-
-  $("settingsmsg").textContent=error
-    ?"فشل الحفظ: "+error.message
-    :"تم حفظ إعدادات المحل بنجاح.";
+  $("settingsmsg").textContent=error?"فشل الحفظ: "+error.message:"تم حفظ إعدادات المحل بنجاح.";
 };
 
 $("productform").onsubmit=async e=>{
@@ -67,8 +65,49 @@ $("productform").onsubmit=async e=>{
 
 async function load(){
   const {data,error}=await db.from("products").select("*").order("created_at",{ascending:false});
-  $("list").innerHTML=error?error.message:(data||[]).map(p=>`<p>${p.name} — ${p.price}</p>`).join("");
+  if(error){$("list").textContent=error.message;return;}
+  $("list").innerHTML=(data||[]).map(p=>`
+    <article>
+      <p><strong>${esc(p.name)}</strong> — ${esc(p.price)}</p>
+      <button type="button" data-edit="${esc(p.id)}">تعديل</button>
+      <button type="button" data-delete="${esc(p.id)}">حذف</button>
+    </article>
+  `).join("")||"لا توجد منتجات";
 }
+
+$("list").addEventListener("click",async e=>{
+  const edit=e.target.closest("[data-edit]");
+  const del=e.target.closest("[data-delete]");
+
+  if(edit){
+    const id=edit.dataset.edit;
+    const {data,error}=await db.from("products").select("*").eq("id",id).single();
+    if(error){$("msg").textContent=error.message;return;}
+
+    const name=prompt("اسم المنتج:",data.name||"");
+    if(name===null)return;
+    const description=prompt("وصف المنتج:",data.description||"");
+    if(description===null)return;
+    const price=prompt("ثمن المنتج:",data.price||"");
+    if(price===null)return;
+
+    const {error:updateError}=await db.from("products").update({
+      name,description,price
+    }).eq("id",id);
+
+    $("msg").textContent=updateError?"فشل التعديل: "+updateError.message:"تم تعديل المنتج بنجاح";
+    load();
+  }
+
+  if(del){
+    const id=del.dataset.delete;
+    if(!confirm("واش متأكد بغيتي تحذف هاد المنتج؟"))return;
+
+    const {error}=await db.from("products").delete().eq("id",id);
+    $("msg").textContent=error?"فشل الحذف: "+error.message:"تم حذف المنتج";
+    load();
+  }
+});
 
 $("images").onchange=async e=>{
   for(const f of e.target.files){
