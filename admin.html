@@ -1,1 +1,63 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إدارة Alaoui Shop</title><link rel="stylesheet" href="style.css"></head><body><main><h1>لوحة إدارة Alaoui Shop</h1><div id="login"><form id="loginform"><label>البريد الإلكتروني <input id="email" type="email" required></label><label>كلمة المرور <input id="password" type="password" required></label><button class="btn">دخول</button></form><p id="msg"></p></div><div id="dash" hidden><p>أنت داخل لوحة الإدارة.</p><button id="logout">خروج</button><h2>إضافة منتج</h2><form id="productform"><input id="name" placeholder="اسم المنتج" required><input id="desc" placeholder="الوصف"><input id="price" placeholder="الثمن"><button class="btn">إضافة</button></form><h2>إضافة صور للمعرض</h2><input id="images" type="file" accept="image/*" multiple><h2>المنتجات</h2><div id="list"></div></div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="admin.js"></script></body></html>
+
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>إدارة Alaoui Shop</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+<h1>لوحة إدارة Alaoui Shop</h1>
+
+<div id="login">
+<form id="loginform">
+<label>البريد الإلكتروني <input id="email" type="email" required></label>
+<label>كلمة المرور <input id="password" type="password" required></label>
+<button class="btn">دخول</button>
+</form>
+<p id="msg"></p>
+</div>
+
+<div id="dash" hidden>
+<p>أنت داخل لوحة الإدارة.</p>
+
+<h2>إعدادات المحل</h2>
+<form id="settingsform">
+<label>عنوان المحل
+<input id="shopaddress" placeholder="عنوان المحل">
+</label>
+<label>رقم واتساب الحجز
+<input id="bookingphone" type="tel">
+</label>
+<label>رقم واتساب الطلبات
+<input id="orderphone" type="tel">
+</label>
+<button class="btn">حفظ الإعدادات</button>
+</form>
+<p id="settingsmsg"></p>
+
+<button id="logout">خروج</button>
+
+<h2>إضافة منتج</h2>
+<form id="productform">
+<input id="name" placeholder="اسم المنتج" required>
+<input id="desc" placeholder="الوصف">
+<input id="price" placeholder="الثمن">
+<button class="btn">إضافة</button>
+</form>
+
+<h2>إضافة صور للمعرض</h2>
+<input id="images" type="file" accept="image/*" multiple>
+
+<h2>المنتجات</h2>
+<div id="list"></div>
+</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
