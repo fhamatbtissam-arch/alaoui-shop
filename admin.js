@@ -487,3 +487,158 @@ $("images").onchange = async e => {
 };
 
 init();
+
+// ===============================
+// إدارة المتجر الإلكتروني
+// ===============================
+
+async function loadStoreProducts() {
+  const list = $("storeProductList");
+  if (!list) return;
+
+  list.textContent = "جاري تحميل منتجات المتجر...";
+
+  const { data, error } = await db
+    .from("store_products")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    list.textContent = "تعذر تحميل المنتجات: " + error.message;
+    return;
+  }
+
+  list.innerHTML = (data || []).map(p => `
+    <article>
+      ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" style="width:100px;height:100px;object-fit:cover">` : ""}
+      <p><strong>${esc(p.name)}</strong> — ${esc(p.price)}</p>
+      <p>${esc(p.description)}</p>
+      <button type="button" data-store-edit="${esc(p.id)}">تعديل</button>
+      <button type="button" data-store-delete="${esc(p.id)}">حذف</button>
+    </article>
+  `).join("") || "لا توجد منتجات في المتجر حاليا.";
+}
+
+// إضافة منتج للمتجر
+$("storeProductForm").onsubmit = async e => {
+  e.preventDefault();
+
+  const button = e.submitter;
+  button.disabled = true;
+  $("storeProductMsg").textContent = "جاري إضافة المنتج...";
+
+  try {
+    const name = $("storeName").value.trim();
+    const description = $("storeDesc").value.trim();
+    const price = $("storePrice").value.trim();
+    const file = $("storeProductImage").files[0];
+
+    let image_url = null;
+
+    if (file) {
+      image_url = await uploadProductImage(file);
+    }
+
+    const { error } = await db.from("store_products").insert({
+      name,
+      description,
+      price,
+      image_url,
+      active: true
+    });
+
+    if (error) throw error;
+
+    $("storeProductMsg").textContent = "تمت إضافة المنتج للمتجر بنجاح ❤️";
+    e.target.reset();
+    await loadStoreProducts();
+
+  } catch (error) {
+    $("storeProductMsg").textContent = "وقع خطأ: " + error.message;
+  } finally {
+    button.disabled = false;
+  }
+};
+
+// تعديل وحذف منتجات المتجر
+$("storeProductList").addEventListener("click", async e => {
+  const edit = e.target.closest("[data-store-edit]");
+  const del = e.target.closest("[data-store-delete]");
+
+  if (edit) {
+    const id = edit.dataset.storeEdit;
+
+    const { data, error } = await db
+      .from("store_products")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      $("storeProductMsg").textContent = error.message;
+      return;
+    }
+
+    const name = prompt("اسم المنتج:", data.name || "");
+    if (name === null) return;
+
+    const description = prompt("وصف المنتج:", data.description || "");
+    if (description === null) return;
+
+    const price = prompt("ثمن المنتج:", data.price || "");
+    if (price === null) return;
+
+    const { error: updateError } = await db
+      .from("store_products")
+      .update({ name, description, price })
+      .eq("id", id);
+
+    $("storeProductMsg").textContent = updateError
+      ? "فشل التعديل: " + updateError.message
+      : "تم تعديل منتج المتجر بنجاح ❤️";
+
+    await loadStoreProducts();
+  }
+
+  if (del) {
+    const id = del.dataset.storeDelete;
+
+    if (!confirm("واش متأكد بغيتي تحذف هاد المنتج من المتجر؟")) return;
+
+    const { data, error } = await db
+      .from("store_products")
+      .select("image_url")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      $("storeProductMsg").textContent = error.message;
+      return;
+    }
+
+    const { error: deleteError } = await db
+      .from("store_products")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      $("storeProductMsg").textContent = deleteError.message;
+      return;
+    }
+
+    try {
+      await removeStoredImage(data.image_url);
+    } catch (_) {}
+
+    $("storeProductMsg").textContent = "تم حذف المنتج من المتجر.";
+    await loadStoreProducts();
+  }
+});
+
+// تحميل منتجات المتجر عند فتح لوحة الإدارة
+const originalShow = show;
+
+show = function () {
+  originalShow();
+  loadStoreProducts();
+};
