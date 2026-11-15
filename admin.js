@@ -24,25 +24,11 @@ function galleryMessage(message) {
   $("galleryMessage").textContent = message;
 }
 
-function prepareGallery() {
-  if (!$("galleryList")) {
-    const area = document.createElement("div");
-    area.innerHTML = `
-      <h3>صور المعرض الحالية</h3>
-      <p id="galleryMessage"></p>
-      <div id="galleryList"></div>
-    `;
-    $("images").insertAdjacentElement("afterend", area);
-  }
-}
-
 async function init() {
   if (!db) {
     showMsg("تحقق من إعدادات Supabase.");
     return;
   }
-
-  prepareGallery();
 
   const { data, error } = await db.auth.getSession();
   if (error) showMsg(error.message);
@@ -126,6 +112,26 @@ async function uploadProductImage(file) {
   return data.publicUrl;
 }
 
+async function removeStoredImage(imageUrl) {
+  if (!imageUrl) return;
+
+  const url = new URL(imageUrl);
+  const marker = "/shop-images/";
+  const position = url.pathname.indexOf(marker);
+
+  if (position === -1) return;
+
+  const path = decodeURIComponent(
+    url.pathname.substring(position + marker.length)
+  );
+
+  const { error } = await db.storage
+    .from("shop-images")
+    .remove([path]);
+
+  if (error) throw error;
+}
+
 $("productform").onsubmit = async e => {
   e.preventDefault();
 
@@ -140,7 +146,6 @@ $("productform").onsubmit = async e => {
     const file = $("productImage").files[0];
 
     let image_url = null;
-
     if (file) image_url = await uploadProductImage(file);
 
     const { error } = await db.from("products").insert({
@@ -255,9 +260,18 @@ async function loadGallery() {
   }
 
   list.innerHTML = data.map(item => `
-    <article style="display:inline-block;margin:10px;padding:8px;border:1px solid #ccc">
+    <article style="display:inline-block;vertical-align:top;margin:10px;padding:8px;border:1px solid #ccc">
       <img src="${esc(item.image_url)}" alt="صورة المعرض"
         style="width:130px;height:110px;object-fit:cover;display:block">
+
+      <input type="file" accept="image/*"
+        data-gallery-file="${esc(item.id)}"
+        style="display:block;width:140px;margin:8px 0">
+
+      <button type="button" data-gallery-replace="${esc(item.id)}">
+        تغيير الصورة
+      </button>
+
       <button type="button" data-gallery-delete="${esc(item.id)}">
         حذف الصورة
       </button>
@@ -266,66 +280,104 @@ async function loadGallery() {
 }
 
 $("galleryList").addEventListener("click", async e => {
-  const button = e.target.closest("[data-gallery-delete]");
-  if (!button) return;
+  const replace = e.target.closest("[data-gallery-replace]");
+  const del = e.target.closest("[data-gallery-delete]");
 
-  if (!confirm("واش متأكد بغيتي تحذف هاد الصورة من المعرض؟")) return;
+  if (replace) {
+    const id = replace.dataset.galleryReplace;
+    const card = replace.closest("article");
+    const fileInput = card.querySelector("[data-gallery-file]");
+    const file = fileInput.files[0];
 
-  button.disabled = true;
-  galleryMessage("جاري حذف الصورة...");
+    if (!file) {
+      galleryMessage("اختار صورة جديدة أولا.");
+      return;
+    }
 
-  try {
-    const id = button.dataset.galleryDelete;
+    if (!confirm("واش متأكد بغيتي تبدل هاد الصورة؟")) return;
 
-    const { data, error } = await db
-      .from("gallery")
-      .select("image_url")
-      .eq("id", id)
-      .single();
+    replace.disabled = true;
+    galleryMessage("جاري تغيير الصورة...");
 
-    if (error) throw error;
+    try {
+      const { data: oldData, error: readError } = await db
+        .from("gallery")
+        .select("image_url")
+        .eq("id", id)
+        .single();
 
-    const { error: deleteError } = await db
-      .from("gallery")
-      .delete()
-      .eq("id", id);
+      if (readError) throw readError;
 
-    if (deleteError) throw deleteError;
+      const newUrl = await uploadProductImage(file);
 
-    if (data.image_url) {
+      const { error: updateError } = await db
+        .from("gallery")
+        .update({ image_url: newUrl })
+        .eq("id", id);
+
+      if (updateError) {
+        try {
+          await removeStoredImage(newUrl);
+        } catch (_) {}
+        throw updateError;
+      }
+
       try {
-        const url = new URL(data.image_url);
-        const marker = "/shop-images/";
-        const position = url.pathname.indexOf(marker);
-
-        if (position !== -1) {
-          const path = decodeURIComponent(
-            url.pathname.substring(position + marker.length)
-          );
-
-          const { error: storageError } = await db.storage
-            .from("shop-images")
-            .remove([path]);
-
-          if (storageError) {
-            galleryMessage("تحيدات الصورة من المعرض، ولكن تعذر حذف الملف من التخزين.");
-            await loadGallery();
-            return;
-          }
-        }
-      } catch (storageProblem) {
-        galleryMessage("تحيدات الصورة من المعرض، وبقى ملفها في التخزين.");
+        await removeStoredImage(oldData.image_url);
+      } catch (storageError) {
+        galleryMessage("تبدلات الصورة بنجاح، ولكن الملف القديم بقى فالتخزين.");
         await loadGallery();
         return;
       }
+
+      galleryMessage("تم تغيير الصورة بنجاح ❤️");
+      await loadGallery();
+
+    } catch (error) {
+      galleryMessage("وقع خطأ: " + error.message);
+      replace.disabled = false;
     }
+  }
 
-    galleryMessage("تم حذف الصورة بنجاح ❤️");
-    await loadGallery();
+  if (del) {
+    const id = del.dataset.galleryDelete;
 
-  } catch (error) {
-    galleryMessage("وقع خطأ: " + error.message);
-    button.disabled = false;
+    if (!confirm("واش متأكد بغيتي تحذف هاد الصورة من المعرض؟")) return;
+
+    del.disabled = true;
+    galleryMessage("جاري حذف الصورة...");
+
+    try {
+      const { data, error } = await db
+        .from("gallery")
+        .select("image_url")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+
+      const { error: deleteError } = await db
+        .from("gallery")
+        .delete()
+        .eq("id", id);
+
+      if (deleteError) throw deleteError;
+
+      try {
+        await removeStoredImage(data.image_url);
+      } catch (_) {
+        galleryMessage("تحيدات الصورة من المعرض، ولكن الملف بقى فالتخزين.");
+        await loadGallery();
+        return;
+      }
+
+      galleryMessage("تم حذف الصورة بنجاح ❤️");
+      await loadGallery();
+
+    } catch (error) {
+      galleryMessage("وقع خطأ: " + error.message);
+      del.disabled = false;
+    }
   }
 });
 
