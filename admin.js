@@ -20,11 +20,29 @@ function showMsg(message) {
   $("msg").textContent = message;
 }
 
+function galleryMessage(message) {
+  $("galleryMessage").textContent = message;
+}
+
+function prepareGallery() {
+  if (!$("galleryList")) {
+    const area = document.createElement("div");
+    area.innerHTML = `
+      <h3>صور المعرض الحالية</h3>
+      <p id="galleryMessage"></p>
+      <div id="galleryList"></div>
+    `;
+    $("images").insertAdjacentElement("afterend", area);
+  }
+}
+
 async function init() {
   if (!db) {
     showMsg("تحقق من إعدادات Supabase.");
     return;
   }
+
+  prepareGallery();
 
   const { data, error } = await db.auth.getSession();
   if (error) showMsg(error.message);
@@ -35,6 +53,7 @@ function show() {
   $("login").hidden = true;
   $("dash").hidden = false;
   load();
+  loadGallery();
   loadSettings();
 }
 
@@ -122,9 +141,7 @@ $("productform").onsubmit = async e => {
 
     let image_url = null;
 
-    if (file) {
-      image_url = await uploadProductImage(file);
-    }
+    if (file) image_url = await uploadProductImage(file);
 
     const { error } = await db.from("products").insert({
       name,
@@ -216,6 +233,102 @@ $("list").addEventListener("click", async e => {
   }
 });
 
+async function loadGallery() {
+  const list = $("galleryList");
+  if (!list) return;
+
+  list.textContent = "جاري تحميل الصور...";
+
+  const { data, error } = await db
+    .from("gallery")
+    .select("*")
+    .order("id", { ascending: false });
+
+  if (error) {
+    list.textContent = "تعذر تحميل الصور: " + error.message;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    list.textContent = "لا توجد صور في المعرض حاليا.";
+    return;
+  }
+
+  list.innerHTML = data.map(item => `
+    <article style="display:inline-block;margin:10px;padding:8px;border:1px solid #ccc">
+      <img src="${esc(item.image_url)}" alt="صورة المعرض"
+        style="width:130px;height:110px;object-fit:cover;display:block">
+      <button type="button" data-gallery-delete="${esc(item.id)}">
+        حذف الصورة
+      </button>
+    </article>
+  `).join("");
+}
+
+$("galleryList").addEventListener("click", async e => {
+  const button = e.target.closest("[data-gallery-delete]");
+  if (!button) return;
+
+  if (!confirm("واش متأكد بغيتي تحذف هاد الصورة من المعرض؟")) return;
+
+  button.disabled = true;
+  galleryMessage("جاري حذف الصورة...");
+
+  try {
+    const id = button.dataset.galleryDelete;
+
+    const { data, error } = await db
+      .from("gallery")
+      .select("image_url")
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+
+    const { error: deleteError } = await db
+      .from("gallery")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) throw deleteError;
+
+    if (data.image_url) {
+      try {
+        const url = new URL(data.image_url);
+        const marker = "/shop-images/";
+        const position = url.pathname.indexOf(marker);
+
+        if (position !== -1) {
+          const path = decodeURIComponent(
+            url.pathname.substring(position + marker.length)
+          );
+
+          const { error: storageError } = await db.storage
+            .from("shop-images")
+            .remove([path]);
+
+          if (storageError) {
+            galleryMessage("تحيدات الصورة من المعرض، ولكن تعذر حذف الملف من التخزين.");
+            await loadGallery();
+            return;
+          }
+        }
+      } catch (storageProblem) {
+        galleryMessage("تحيدات الصورة من المعرض، وبقى ملفها في التخزين.");
+        await loadGallery();
+        return;
+      }
+    }
+
+    galleryMessage("تم حذف الصورة بنجاح ❤️");
+    await loadGallery();
+
+  } catch (error) {
+    galleryMessage("وقع خطأ: " + error.message);
+    button.disabled = false;
+  }
+});
+
 $("images").onchange = async e => {
   const files = Array.from(e.target.files || []);
 
@@ -230,13 +343,14 @@ $("images").onchange = async e => {
       if (error) throw error;
 
     } catch (error) {
-      showMsg("خطأ في رفع الصورة: " + error.message);
+      galleryMessage("خطأ في رفع الصورة: " + error.message);
       return;
     }
   }
 
-  showMsg("تم رفع الصور بنجاح");
+  galleryMessage("تم رفع الصور بنجاح");
   e.target.value = "";
+  await loadGallery();
 };
 
 init();
