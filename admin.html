@@ -56,7 +56,6 @@
 </label>
 <button class="btn" type="submit">إضافة إلى قائمة الطعام</button>
 </form>
-
 <h3>منتجات قائمة الطعام</h3>
 <div id="list"></div>
 
@@ -89,31 +88,29 @@
 <button class="btn" type="submit">إضافة إلى المتجر</button>
 </form>
 <p id="storeProductMsg"></p>
-
 <h3>منتجات المتجر الحالية</h3>
 <div id="storeProductList"></div>
 
 <hr>
 <h2>إضافة صور للمعرض</h2>
 <input id="images" type="file" accept="image/*" multiple>
-
 <h3>صور المعرض الحالية</h3>
 <p id="galleryMessage"></p>
 <div id="galleryList"></div>
+
+<hr>
+<section id="reviewsAdmin">
+<h2>⭐ إدارة تقييمات الزبناء</h2>
+<p>راجع تقييمات الزبناء ووافق عليها قبل نشرها.</p>
+<div id="adminReviewsList">جاري تحميل التقييمات...</div>
+<p id="adminReviewMessage"></p>
+</section>
+
 </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="admin.js"></script>
-<!-- إدارة تقييمات الزبناء -->
-<section id="reviewsAdmin">
-  <h2>⭐ إدارة تقييمات الزبناء</h2>
-  <p>راجع تقييمات الزبناء ووافق عليها قبل نشرها.</p>
-  <div id="adminReviewsList">
-    جاري تحميل التقييمات...
-  </div>
-  <p id="adminReviewMessage"></p>
-</section>
 </body>
 </html>
