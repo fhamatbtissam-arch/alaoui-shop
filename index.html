@@ -76,5 +76,41 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="app.js"></script>
+<!-- تقييمات الزبناء -->
+<section id="reviews">
+  <h2>⭐ آراء وتقييمات زبنائنا</h2>
+  <p>رأيك كيعنينا، شارك معنا تجربتك.</p>
+
+  <form id="reviewForm">
+    <input
+      type="text"
+      id="reviewName"
+      placeholder="الاسم ديالك"
+      required
+    >
+
+    <label>التقييم ديالك:</label>
+    <select id="reviewRating" required>
+      <option value="5">⭐⭐⭐⭐⭐ ممتاز</option>
+      <option value="4">⭐⭐⭐⭐ جيد جداً</option>
+      <option value="3">⭐⭐⭐ جيد</option>
+      <option value="2">⭐⭐ ضعيف</option>
+      <option value="1">⭐ سيئ</option>
+    </select>
+
+    <textarea
+      id="reviewComment"
+      placeholder="كتب لينا رأيك..."
+      required
+    ></textarea>
+
+    <button type="submit">إرسال التقييم</button>
+    <p id="reviewMessage"></p>
+  </form>
+
+  <div id="reviewsList">
+    <p>جاري تحميل التقييمات...</p>
+  </div>
+</section>
 </body>
 </html>
