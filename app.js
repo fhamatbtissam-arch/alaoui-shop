@@ -44,6 +44,8 @@ async function run() {
 
     if (productsResult.error) throw productsResult.error;
 
+    let orders = "";
+
     if (settingsResult.data) {
       const settings = settingsResult.data;
 
@@ -51,7 +53,7 @@ async function run() {
         settings.address || "";
 
       const booking = (settings.whatsapp || "").replace(/\D/g, "");
-      const orders = (settings.phone || "").replace(/\D/g, "");
+      orders = (settings.phone || "").replace(/\D/g, "");
 
       const bookingLink = document.querySelector("#wa");
       const orderLink = document.querySelector("#orderWa");
@@ -77,14 +79,31 @@ async function run() {
 
     const items = productsResult.data || [];
 
-    products.innerHTML = items.map(p => `
-      <article>
-        ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}">` : ""}
-        <h3>${esc(p.name)}</h3>
-        <p>${esc(p.description)}</p>
-        <strong>${esc(p.price)}</strong>
-      </article>
-    `).join("") || "القائمة قيد التحضير";
+    products.innerHTML = items.map(p => {
+      const orderText =
+        "السلام عليكم، بغيت نطلب هاد المنتج من Alaoui Shop:\n" +
+        "المنتج: " + p.name + "\n" +
+        "الثمن: " + p.price;
+
+      const orderUrl = orders
+        ? "https://wa.me/" + orders +
+          "?text=" + encodeURIComponent(orderText)
+        : "#";
+
+      return `
+        <article>
+          ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}">` : ""}
+          <h3>${esc(p.name)}</h3>
+          <p>${esc(p.description)}</p>
+          <strong>${esc(p.price)}</strong>
+          ${
+            orders
+              ? `<a class="btn" href="${orderUrl}" target="_blank" rel="noopener">اطلب عبر واتساب</a>`
+              : `<p>رقم الطلبات غير متوفر حالياً</p>`
+          }
+        </article>
+      `;
+    }).join("") || "المنتجات قيد التحضير";
 
     if (galleryResult.error) {
       console.error("Gallery error:", galleryResult.error);
