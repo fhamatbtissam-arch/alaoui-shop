@@ -13,8 +13,12 @@
 
 <div id="login">
 <form id="loginform">
-<label>البريد الإلكتروني <input id="email" type="email" required></label>
-<label>كلمة المرور <input id="password" type="password" required></label>
+<label>البريد الإلكتروني
+<input id="email" type="email" required>
+</label>
+<label>كلمة المرور
+<input id="password" type="password" required>
+</label>
 <button class="btn">دخول</button>
 </form>
 <p id="msg"></p>
@@ -55,6 +59,22 @@
 
 <h3>منتجات قائمة الطعام</h3>
 <div id="list"></div>
+
+<hr>
+<h2>🥤 إدارة المشروبات</h2>
+<h3>إضافة مشروب جديد</h3>
+<form id="drinkForm">
+<input id="drinkName" placeholder="اسم المشروب" required>
+<input id="drinkDesc" placeholder="وصف المشروب">
+<input id="drinkPrice" placeholder="الثمن" required>
+<label>صورة المشروب
+<input id="drinkImage" type="file" accept="image/*">
+</label>
+<button class="btn" type="submit">إضافة المشروب</button>
+</form>
+<p id="drinkMessage"></p>
+<h3>المشروبات الحالية</h3>
+<div id="drinkList"></div>
 
 <hr>
 <h2>🛍️ إدارة المتجر الإلكتروني</h2>
