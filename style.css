@@ -389,3 +389,88 @@ main section p {
     font-size: 13px;
   }
 }
+/* تصميم تقييمات الزبناء */
+#reviews {
+  background: #f3eee3;
+  padding: 35px 20px;
+  margin: 30px auto;
+  border-radius: 20px;
+  text-align: center;
+}
+
+#reviews h2 {
+  color: #173d2b;
+  font-size: 26px;
+}
+
+#reviews > p {
+  color: #766b59;
+}
+
+#reviewForm {
+  max-width: 550px;
+  margin: 25px auto;
+  padding: 25px;
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 5px 18px rgba(23,61,43,.09);
+}
+
+#reviewForm input,
+#reviewForm select,
+#reviewForm textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px;
+  margin: 12px 0;
+  border: 1px solid #ddd3c2;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 15px;
+}
+
+#reviewForm textarea {
+  min-height: 110px;
+}
+
+#reviewForm button {
+  background: #173d2b;
+  color: white;
+  border: none;
+  padding: 13px 25px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+#reviewMessage {
+  color: #173d2b;
+  font-weight: bold;
+}
+
+#reviewsList {
+  max-width: 850px;
+  margin: 25px auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+}
+
+.review-card {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  border: 1px solid #e8dfce;
+  box-shadow: 0 4px 14px rgba(23,61,43,.07);
+  text-align: right;
+}
+
+.review-card h3 {
+  color: #173d2b;
+}
+
+.review-card p {
+  line-height: 1.8;
+  color: #766b59;
+}
