@@ -40,26 +40,46 @@
 
 <button id="logout">خروج</button>
 
-<h2>إضافة منتج</h2>
+<hr>
+<h2>🍽️ إدارة قائمة الطعام</h2>
+<h3>إضافة منتج للطعام</h3>
 <form id="productform">
-<input id="name" placeholder="اسم المنتج" required>
+<input id="name" placeholder="اسم المأكولة أو المشروب" required>
 <input id="desc" placeholder="الوصف">
 <input id="price" placeholder="الثمن" required>
 <label>صورة المنتج
 <input id="productImage" type="file" accept="image/*">
 </label>
-<button class="btn" type="submit">إضافة المنتج والصورة</button>
+<button class="btn" type="submit">إضافة إلى قائمة الطعام</button>
 </form>
 
+<h3>منتجات قائمة الطعام</h3>
+<div id="list"></div>
+
+<hr>
+<h2>🛍️ إدارة المتجر الإلكتروني</h2>
+<h3>إضافة منتج جديد للمتجر</h3>
+<form id="storeProductForm">
+<input id="storeName" placeholder="اسم منتج المتجر" required>
+<input id="storeDesc" placeholder="وصف المنتج">
+<input id="storePrice" placeholder="الثمن" required>
+<label>صورة منتج المتجر
+<input id="storeProductImage" type="file" accept="image/*">
+</label>
+<button class="btn" type="submit">إضافة إلى المتجر</button>
+</form>
+<p id="storeProductMsg"></p>
+
+<h3>منتجات المتجر الحالية</h3>
+<div id="storeProductList"></div>
+
+<hr>
 <h2>إضافة صور للمعرض</h2>
 <input id="images" type="file" accept="image/*" multiple>
 
 <h3>صور المعرض الحالية</h3>
 <p id="galleryMessage"></p>
 <div id="galleryList"></div>
-
-<h2>المنتجات</h2>
-<div id="list"></div>
 </div>
 </main>
 
