@@ -35,7 +35,11 @@ async function run() {
       await Promise.all([
         db.from("shop_settings").select("*").eq("id", 1).maybeSingle(),
         db.from("products").select("*").eq("active", true),
-        db.from("gallery").select("*").eq("active", true)
+        db.from("gallery")
+          .select("*")
+          .eq("active", true)
+          .order("sort_order", { ascending: true, nullsFirst: false })
+          .order("id", { ascending: false })
       ]);
 
     if (productsResult.error) throw productsResult.error;
