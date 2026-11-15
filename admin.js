@@ -238,6 +238,7 @@ $("list").addEventListener("click", async e => {
   }
 });
 
+// تحميل صور المعرض حسب الترتيب
 async function loadGallery() {
   const list = $("galleryList");
   if (!list) return;
@@ -247,6 +248,7 @@ async function loadGallery() {
   const { data, error } = await db
     .from("gallery")
     .select("*")
+    .order("sort_order", { ascending: true })
     .order("id", { ascending: false });
 
   if (error) {
@@ -259,10 +261,18 @@ async function loadGallery() {
     return;
   }
 
-  list.innerHTML = data.map(item => `
+  list.innerHTML = data.map((item, index) => `
     <article style="display:inline-block;vertical-align:top;margin:10px;padding:8px;border:1px solid #ccc">
       <img src="${esc(item.image_url)}" alt="صورة المعرض"
         style="width:130px;height:110px;object-fit:cover;display:block">
+
+      <p>الترتيب: ${index + 1}</p>
+
+      <button type="button" data-gallery-up="${esc(item.id)}"
+        ${index === 0 ? "disabled" : ""}>⬆️ طلع</button>
+
+      <button type="button" data-gallery-down="${esc(item.id)}"
+        ${index === data.length - 1 ? "disabled" : ""}>⬇️ هبط</button>
 
       <input type="file" accept="image/*"
         data-gallery-file="${esc(item.id)}"
@@ -279,10 +289,67 @@ async function loadGallery() {
   `).join("");
 }
 
+// تغيير ترتيب الصور
 $("galleryList").addEventListener("click", async e => {
+  const moveUp = e.target.closest("[data-gallery-up]");
+  const moveDown = e.target.closest("[data-gallery-down]");
   const replace = e.target.closest("[data-gallery-replace]");
   const del = e.target.closest("[data-gallery-delete]");
 
+  if (moveUp || moveDown) {
+    const button = moveUp || moveDown;
+    const id = button.dataset.galleryUp || button.dataset.galleryDown;
+    const direction = moveUp ? -1 : 1;
+
+    button.disabled = true;
+    galleryMessage("جاري تغيير ترتيب الصور...");
+
+    try {
+      const { data, error } = await db
+        .from("gallery")
+        .select("id, sort_order")
+        .order("sort_order", { ascending: true })
+        .order("id", { ascending: false });
+
+      if (error) throw error;
+
+      const index = data.findIndex(item => String(item.id) === String(id));
+      const target = index + direction;
+
+      if (index < 0 || target < 0 || target >= data.length) {
+        await loadGallery();
+        return;
+      }
+
+      const currentOrder = data[index].sort_order;
+      const targetOrder = data[target].sort_order;
+
+      const firstUpdate = await db
+        .from("gallery")
+        .update({ sort_order: targetOrder })
+        .eq("id", id);
+
+      if (firstUpdate.error) throw firstUpdate.error;
+
+      const secondUpdate = await db
+        .from("gallery")
+        .update({ sort_order: currentOrder })
+        .eq("id", data[target].id);
+
+      if (secondUpdate.error) throw secondUpdate.error;
+
+      galleryMessage("تبدل ترتيب الصورة بنجاح ❤️");
+      await loadGallery();
+
+    } catch (error) {
+      galleryMessage("وقع خطأ: " + error.message);
+      await loadGallery();
+    }
+
+    return;
+  }
+
+  // تغيير صورة
   if (replace) {
     const id = replace.dataset.galleryReplace;
     const card = replace.closest("article");
@@ -324,8 +391,8 @@ $("galleryList").addEventListener("click", async e => {
 
       try {
         await removeStoredImage(oldData.image_url);
-      } catch (storageError) {
-        galleryMessage("تبدلات الصورة بنجاح، ولكن الملف القديم بقى فالتخزين.");
+      } catch (_) {
+        galleryMessage("تبدلات الصورة، ولكن الملف القديم بقى فالتخزين.");
         await loadGallery();
         return;
       }
@@ -339,6 +406,7 @@ $("galleryList").addEventListener("click", async e => {
     }
   }
 
+  // حذف صورة
   if (del) {
     const id = del.dataset.galleryDelete;
 
@@ -381,6 +449,7 @@ $("galleryList").addEventListener("click", async e => {
   }
 });
 
+// رفع صور جديدة للمعرض
 $("images").onchange = async e => {
   const files = Array.from(e.target.files || []);
 
@@ -388,8 +457,20 @@ $("images").onchange = async e => {
     try {
       const image_url = await uploadProductImage(file);
 
+      const { data: lastItem, error: orderError } = await db
+        .from("gallery")
+        .select("sort_order")
+        .order("sort_order", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (orderError) throw orderError;
+
+      const nextOrder = (lastItem?.sort_order || 0) + 1;
+
       const { error } = await db.from("gallery").insert({
-        image_url
+        image_url,
+        sort_order: nextOrder
       });
 
       if (error) throw error;
@@ -400,7 +481,7 @@ $("images").onchange = async e => {
     }
   }
 
-  galleryMessage("تم رفع الصور بنجاح");
+  galleryMessage("تم رفع الصور بنجاح ❤️");
   e.target.value = "";
   await loadGallery();
 };
