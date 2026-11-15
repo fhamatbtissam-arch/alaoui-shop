@@ -297,3 +297,95 @@ main section p {
     font-size: 13px;
   }
 }
+
+/* تصميم احترافي لقسم المشروبات */
+#drinks {
+  background: #f3eee3;
+  border-radius: 20px;
+  margin: 25px auto;
+}
+
+#drinks h2 {
+  color: #173d2b;
+  margin-bottom: 12px;
+}
+
+#drinks > p {
+  color: #766b59;
+}
+
+#drinksProducts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  max-width: 1100px;
+  margin: 30px auto 0;
+}
+
+#drinksProducts article {
+  background: white;
+  border: 1px solid #e8dfce;
+  border-radius: 18px;
+  overflow: hidden;
+  text-align: center;
+  padding-bottom: 20px;
+  box-shadow: 0 5px 18px rgba(23,61,43,.09);
+  transition: transform .25s ease;
+}
+
+#drinksProducts article:hover {
+  transform: translateY(-5px);
+}
+
+#drinksProducts article img {
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+  display: block;
+}
+
+#drinksProducts article h3 {
+  color: #173d2b;
+  font-size: 21px;
+  margin: 15px 10px 8px;
+}
+
+#drinksProducts article p {
+  color: #777;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+#drinksProducts article strong {
+  display: block;
+  color: #a87932;
+  font-size: 22px;
+  margin: 12px;
+}
+
+#drinksProducts article .btn {
+  background: #173d2b;
+  color: white;
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+  #drinksProducts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  #drinksProducts article img {
+    height: 145px;
+  }
+
+  #drinksProducts article h3 {
+    font-size: 16px;
+  }
+
+  #drinksProducts article .btn {
+    padding: 9px;
+    font-size: 13px;
+  }
+}
