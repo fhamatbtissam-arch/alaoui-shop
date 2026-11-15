@@ -176,3 +176,78 @@ document.addEventListener("click", function (e) {
 });
 
 run();
+// ===============================
+// تقييمات الزبناء
+// ===============================
+
+const reviewForm = document.getElementById("reviewForm");
+const reviewsList = document.getElementById("reviewsList");
+const reviewMessage = document.getElementById("reviewMessage");
+
+function reviewEscape(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[char]);
+}
+
+async function loadReviews() {
+  if (!reviewsList) return;
+
+  reviewsList.textContent = "جاري تحميل التقييمات...";
+
+  const { data, error } = await db
+    .from("reviews")
+    .select("*")
+    .eq("approved", true)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    reviewsList.textContent = "تعذر تحميل التقييمات.";
+    return;
+  }
+
+  reviewsList.innerHTML = (data || []).map(review => `
+    <article class="review-card">
+      <h3>${reviewEscape(review.customer_name)}</h3>
+      <p>${"⭐".repeat(review.rating)}</p>
+      <p>${reviewEscape(review.comment)}</p>
+    </article>
+  `).join("") || "<p>كون أول واحد يشارك رأيو معنا!</p>";
+}
+
+if (reviewForm) {
+  reviewForm.addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const button = reviewForm.querySelector('button[type="submit"]');
+    button.disabled = true;
+    reviewMessage.textContent = "جاري إرسال التقييم...";
+
+    try {
+      const { error } = await db.from("reviews").insert({
+        customer_name: document.getElementById("reviewName").value.trim(),
+        rating: Number(document.getElementById("reviewRating").value),
+        comment: document.getElementById("reviewComment").value.trim(),
+        approved: false
+      });
+
+      if (error) throw error;
+
+      reviewMessage.textContent =
+        "شكراً على تقييمك! غادي يظهر من بعد المراجعة ❤️";
+
+      reviewForm.reset();
+
+    } catch (error) {
+      reviewMessage.textContent = "وقع خطأ: " + error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+
+loadReviews();
