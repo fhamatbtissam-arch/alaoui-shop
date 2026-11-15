@@ -141,3 +141,50 @@ img, input {
     font-size: 13px;
   }
 }
+
+/* خط احترافي وأنيق لموقع Alaoui Shop */
+@import url('https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&display=swap');
+
+.hero,
+main section {
+  font-family: 'El Messiri', sans-serif;
+}
+
+.hero h1 {
+  font-family: 'El Messiri', sans-serif;
+  font-weight: 700;
+  line-height: 1.5;
+  text-shadow: 2px 3px 12px rgba(0,0,0,.45);
+}
+
+.hero small {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.hero p {
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 2;
+}
+
+main section h2 {
+  font-family: 'El Messiri', sans-serif;
+  font-size: clamp(28px, 4vw, 38px);
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+main section p {
+  font-family: 'El Messiri', sans-serif;
+  font-size: 19px;
+  line-height: 2;
+  font-weight: 500;
+}
+
+.hero .btn {
+  font-family: 'El Messiri', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+}
