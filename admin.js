@@ -642,3 +642,137 @@ show = function () {
   originalShow();
   loadStoreProducts();
 };
+// ===============================
+// إدارة المشروبات
+// ===============================
+
+async function loadDrinks() {
+  const list = $("drinkList");
+  if (!list) return;
+
+  list.textContent = "جاري تحميل المشروبات...";
+
+  const { data, error } = await db
+    .from("drinks")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    list.textContent = "تعذر تحميل المشروبات: " + error.message;
+    return;
+  }
+
+  list.innerHTML = (data || []).map(p => `
+    <article>
+      ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" style="width:100px;height:100px;object-fit:cover">` : ""}
+      <p><strong>${esc(p.name)}</strong> — ${esc(p.price)}</p>
+      <p>${esc(p.description || "")}</p>
+      <button type="button" data-drink-edit="${esc(p.id)}">تعديل</button>
+      <button type="button" data-drink-delete="${esc(p.id)}">حذف</button>
+    </article>
+  `).join("") || "لا توجد مشروبات حاليا.";
+}
+
+$("drinkForm").onsubmit = async e => {
+  e.preventDefault();
+
+  const button = e.submitter || e.target.querySelector('button[type="submit"]');
+  button.disabled = true;
+  $("drinkMessage").textContent = "جاري إضافة المشروب...";
+
+  try {
+    const name = $("drinkName").value.trim();
+    const description = $("drinkDesc").value.trim();
+    const price = $("drinkPrice").value.trim();
+    const file = $("drinkImage").files[0];
+
+    let image_url = null;
+    if (file) image_url = await uploadProductImage(file);
+
+    const { error } = await db.from("drinks").insert({
+      name,
+      description,
+      price,
+      image_url,
+      active: true
+    });
+
+    if (error) throw error;
+
+    $("drinkMessage").textContent = "تمت إضافة المشروب بنجاح ❤️";
+    e.target.reset();
+    await loadDrinks();
+
+  } catch (error) {
+    $("drinkMessage").textContent = "وقع خطأ: " + error.message;
+  } finally {
+    button.disabled = false;
+  }
+};
+
+$("drinkList").addEventListener("click", async e => {
+  const edit = e.target.closest("[data-drink-edit]");
+  const del = e.target.closest("[data-drink-delete]");
+
+  if (edit) {
+    const id = edit.dataset.drinkEdit;
+
+    const { data, error } = await db
+      .from("drinks")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      $("drinkMessage").textContent = error.message;
+      return;
+    }
+
+    const name = prompt("اسم المشروب:", data.name || "");
+    if (name === null) return;
+
+    const description = prompt("وصف المشروب:", data.description || "");
+    if (description === null) return;
+
+    const price = prompt("ثمن المشروب:", data.price || "");
+    if (price === null) return;
+
+    const { error: updateError } = await db
+      .from("drinks")
+      .update({ name, description, price })
+      .eq("id", id);
+
+    $("drinkMessage").textContent = updateError
+      ? "فشل التعديل: " + updateError.message
+      : "تم تعديل المشروب بنجاح ❤️";
+
+    await loadDrinks();
+  }
+
+  if (del) {
+    const id = del.dataset.drinkDelete;
+
+    if (!confirm("واش متأكد بغيتي تحذف هاد المشروب؟")) return;
+
+    const { error: deleteError } = await db
+      .from("drinks")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      $("drinkMessage").textContent = deleteError.message;
+      return;
+    }
+
+    $("drinkMessage").textContent = "تم حذف المشروب.";
+    await loadDrinks();
+  }
+});
+
+// تحميل المشروبات عند فتح لوحة الإدارة
+const previousShowForDrinks = show;
+
+show = function () {
+  previousShowForDrinks();
+  loadDrinks();
+};
