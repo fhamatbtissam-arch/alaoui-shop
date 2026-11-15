@@ -1,48 +1,99 @@
 
 const c = window.ALAOUI_CONFIG || {};
-const ready = !!(c.SUPABASE_URL && c.SUPABASE_URL.startsWith("https://") && c.SUPABASE_ANON_KEY && c.SUPABASE_ANON_KEY.length > 20);
-const db = ready ? supabase.createClient(c.SUPABASE_URL, c.SUPABASE_ANON_KEY) : null;
 
-const esc = s => String(s ?? "").replace(/[&<>"]/g, x => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[x]));
+const ready = !!(
+  c.SUPABASE_URL &&
+  c.SUPABASE_URL.startsWith("https://") &&
+  c.SUPABASE_ANON_KEY &&
+  c.SUPABASE_ANON_KEY.length > 20
+);
+
+const db = ready
+  ? supabase.createClient(c.SUPABASE_URL, c.SUPABASE_ANON_KEY)
+  : null;
+
+const esc = s =>
+  String(s ?? "").replace(/[&<>"']/g, x => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[x]));
 
 async function run() {
-  if (!db) return;
+  const products = document.querySelector("#products");
+  const photos = document.querySelector("#photos");
 
-  const [a, b, g] = await Promise.all([
-    db.from("shop_settings").select("*").eq("id", 1).maybeSingle(),
-    db.from("products").select("*").eq("active", true).order("sort_order"),
-    db.from("gallery").select("*").eq("active", true)
-  ]);
-
-  if (a.data) {
-    document.querySelector("#address").textContent = a.data.address || "";
-
-    const booking = (a.data.whatsapp || "").replace(/\D/g, "");
-    const orders = (a.data.phone || "").replace(/\D/g, "");
-
-    const bookingLink = document.querySelector("#wa");
-    const orderLink = document.querySelector("#orderWa");
-
-    if (bookingLink) {
-      bookingLink.href = booking
-        ? "https://wa.me/" + booking + "?text=" + encodeURIComponent("السلام عليكم، بغيت نحجز طاولة في Alaoui Shop.")
-        : "#";
-    }
-
-    if (orderLink) {
-      orderLink.href = orders
-        ? "https://wa.me/" + orders + "?text=" + encodeURIComponent("السلام عليكم، بغيت ندير طلبية من Alaoui Shop.")
-        : "#";
-    }
+  if (!db) {
+    products.textContent = "تعذر الاتصال بقاعدة البيانات.";
+    return;
   }
 
-  document.querySelector("#products").innerHTML = (b.data || []).map(p =>
-    `<article>${p.image_url ? `<img src="${esc(p.image_url)}">` : ""}<h3>${esc(p.name)}</h3><p>${esc(p.description)}</p><strong>${esc(p.price)}</strong></article>`
-  ).join("") || "القائمة قيد التحضير";
+  try {
+    const [settingsResult, productsResult, galleryResult] =
+      await Promise.all([
+        db.from("shop_settings").select("*").eq("id", 1).maybeSingle(),
+        db.from("products").select("*").eq("active", true),
+        db.from("gallery").select("*").eq("active", true)
+      ]);
 
-  document.querySelector("#photos").innerHTML = (g.data || []).map(p =>
-    `<img src="${esc(p.image_url)}">`
-  ).join("");
+    if (productsResult.error) throw productsResult.error;
+
+    if (settingsResult.data) {
+      const settings = settingsResult.data;
+
+      document.querySelector("#address").textContent =
+        settings.address || "";
+
+      const booking = (settings.whatsapp || "").replace(/\D/g, "");
+      const orders = (settings.phone || "").replace(/\D/g, "");
+
+      const bookingLink = document.querySelector("#wa");
+      const orderLink = document.querySelector("#orderWa");
+
+      if (bookingLink) {
+        bookingLink.href = booking
+          ? "https://wa.me/" + booking +
+            "?text=" + encodeURIComponent(
+              "السلام عليكم، بغيت نحجز طاولة في Alaoui Shop."
+            )
+          : "#";
+      }
+
+      if (orderLink) {
+        orderLink.href = orders
+          ? "https://wa.me/" + orders +
+            "?text=" + encodeURIComponent(
+              "السلام عليكم، بغيت ندير طلبية من Alaoui Shop."
+            )
+          : "#";
+      }
+    }
+
+    const items = productsResult.data || [];
+
+    products.innerHTML = items.map(p => `
+      <article>
+        ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}">` : ""}
+        <h3>${esc(p.name)}</h3>
+        <p>${esc(p.description)}</p>
+        <strong>${esc(p.price)}</strong>
+      </article>
+    `).join("") || "القائمة قيد التحضير";
+
+    if (galleryResult.error) {
+      console.error("Gallery error:", galleryResult.error);
+    } else {
+      photos.innerHTML = (galleryResult.data || []).map(p =>
+        `<img src="${esc(p.image_url)}" alt="صورة المحل">`
+      ).join("");
+    }
+
+  } catch (error) {
+    console.error("Shop loading error:", error);
+    products.textContent = "وقع مشكل في تحميل القائمة. المرجو المحاولة لاحقاً.";
+  }
 }
 
-run().catch(console.error);
+run();
