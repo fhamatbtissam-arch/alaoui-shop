@@ -143,3 +143,12 @@ async function run() {
 }
 
 run();
+
+// فتح صور المعرض عند الضغط عليها
+document.addEventListener("click", function (e) {
+  const photo = e.target.closest("#photos img");
+
+  if (!photo) return;
+
+  window.open(photo.src, "_blank");
+  });
