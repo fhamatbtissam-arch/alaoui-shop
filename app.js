@@ -21,26 +21,59 @@ const esc = s =>
     "'": "&#39;"
   }[x]));
 
+function productCard(p, orders) {
+  const orderText =
+    "السلام عليكم، بغيت نطلب هاد المنتج من Alaoui Shop:\n" +
+    "المنتج: " + p.name + "\n" +
+    "الثمن: " + (p.price || "");
+
+  const orderUrl = orders
+    ? "https://wa.me/" + orders +
+      "?text=" + encodeURIComponent(orderText)
+    : "#";
+
+  return `
+    <article>
+      ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}">` : ""}
+      <h3>${esc(p.name)}</h3>
+      <p>${esc(p.description)}</p>
+      <strong>${esc(p.price)}</strong>
+      ${
+        orders
+          ? `<a class="btn" href="${orderUrl}" target="_blank" rel="noopener">اطلب عبر واتساب</a>`
+          : `<p>رقم الطلبات غير متوفر حالياً</p>`
+      }
+    </article>
+  `;
+}
+
 async function run() {
   const products = document.querySelector("#products");
+  const storeProducts = document.querySelector("#storeProducts");
   const photos = document.querySelector("#photos");
 
   if (!db) {
     products.textContent = "تعذر الاتصال بقاعدة البيانات.";
+    if (storeProducts) storeProducts.textContent = "تعذر الاتصال بقاعدة البيانات.";
     return;
   }
 
   try {
-    const [settingsResult, productsResult, galleryResult] =
-      await Promise.all([
-        db.from("shop_settings").select("*").eq("id", 1).maybeSingle(),
-        db.from("products").select("*").eq("active", true),
-        db.from("gallery")
-          .select("*")
-          .eq("active", true)
-          .order("sort_order", { ascending: true, nullsFirst: false })
-          .order("id", { ascending: false })
-      ]);
+    const [
+      settingsResult,
+      productsResult,
+      storeResult,
+      galleryResult
+    ] = await Promise.all([
+      db.from("shop_settings").select("*").eq("id", 1).maybeSingle(),
+      db.from("products").select("*").eq("active", true),
+      db.from("store_products").select("*").eq("active", true).order("id", { ascending: false }),
+      db.from("gallery")
+        .select("*")
+        .eq("active", true)
+        .order("sort_order", { ascending: true, nullsFirst: false })
+        .order("id", { ascending: false })
+    ]);
 
     if (productsResult.error) throw productsResult.error;
 
@@ -77,33 +110,20 @@ async function run() {
       }
     }
 
-    const items = productsResult.data || [];
+    products.innerHTML = (productsResult.data || [])
+      .map(p => productCard(p, orders))
+      .join("") || "قائمة الطعام قيد التحضير";
 
-    products.innerHTML = items.map(p => {
-      const orderText =
-        "السلام عليكم، بغيت نطلب هاد المنتج من Alaoui Shop:\n" +
-        "المنتج: " + p.name + "\n" +
-        "الثمن: " + p.price;
-
-      const orderUrl = orders
-        ? "https://wa.me/" + orders +
-          "?text=" + encodeURIComponent(orderText)
-        : "#";
-
-      return `
-        <article>
-          ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}">` : ""}
-          <h3>${esc(p.name)}</h3>
-          <p>${esc(p.description)}</p>
-          <strong>${esc(p.price)}</strong>
-          ${
-            orders
-              ? `<a class="btn" href="${orderUrl}" target="_blank" rel="noopener">اطلب عبر واتساب</a>`
-              : `<p>رقم الطلبات غير متوفر حالياً</p>`
-          }
-        </article>
-      `;
-    }).join("") || "المنتجات قيد التحضير";
+    if (storeProducts) {
+      if (storeResult.error) {
+        console.error("Store products error:", storeResult.error);
+        storeProducts.textContent = "تعذر تحميل منتجات المتجر حالياً.";
+      } else {
+        storeProducts.innerHTML = (storeResult.data || [])
+          .map(p => productCard(p, orders))
+          .join("") || "المتجر الإلكتروني قيد التجهيز.";
+      }
+    }
 
     if (galleryResult.error) {
       console.error("Gallery error:", galleryResult.error);
@@ -116,6 +136,9 @@ async function run() {
   } catch (error) {
     console.error("Shop loading error:", error);
     products.textContent = "وقع مشكل في تحميل القائمة. المرجو المحاولة لاحقاً.";
+    if (storeProducts) {
+      storeProducts.textContent = "وقع مشكل في تحميل المتجر.";
+    }
   }
 }
 
