@@ -776,3 +776,86 @@ show = function () {
   previousShowForDrinks();
   loadDrinks();
 };
+// ===============================
+// إدارة تقييمات الزبناء
+// ===============================
+
+async function loadAdminReviews() {
+  const list = $("adminReviewsList");
+  if (!list) return;
+
+  list.textContent = "جاري تحميل التقييمات...";
+
+  const { data, error } = await db
+    .from("reviews")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    list.textContent = "خطأ: " + error.message;
+    return;
+  }
+
+  list.innerHTML = (data || []).map(r => `
+    <article style="background:white;padding:15px;margin:12px 0;border-radius:12px">
+      <h3>${esc(r.customer_name)}</h3>
+      <p>${"⭐".repeat(r.rating)}</p>
+      <p>${esc(r.comment || "")}</p>
+      <p>${r.approved ? "منشور" : "في انتظار الموافقة"}</p>
+
+      ${!r.approved ? `
+        <button type="button" data-review-approve="${r.id}">
+          موافقة ونشر
+        </button>
+      ` : ""}
+
+      <button type="button" data-review-delete="${r.id}">
+        حذف
+      </button>
+    </article>
+  `).join("") || "لا توجد تقييمات حاليا.";
+}
+
+const adminReviewsList = $("adminReviewsList");
+
+if (adminReviewsList) {
+  adminReviewsList.addEventListener("click", async e => {
+    const approve = e.target.closest("[data-review-approve]");
+    const del = e.target.closest("[data-review-delete]");
+
+    if (approve) {
+      const { error } = await db
+        .from("reviews")
+        .update({ approved: true })
+        .eq("id", approve.dataset.reviewApprove);
+
+      $("adminReviewMessage").textContent = error
+        ? "فشل النشر: " + error.message
+        : "تم نشر التقييم بنجاح ❤️";
+
+      await loadAdminReviews();
+    }
+
+    if (del) {
+      if (!confirm("واش متأكد بغيتي تحذف هاد التقييم؟")) return;
+
+      const { error } = await db
+        .from("reviews")
+        .delete()
+        .eq("id", del.dataset.reviewDelete);
+
+      $("adminReviewMessage").textContent = error
+        ? "فشل الحذف: " + error.message
+        : "تم حذف التقييم.";
+
+      await loadAdminReviews();
+    }
+  });
+}
+
+const previousShowForReviews = show;
+
+show = function () {
+  previousShowForReviews();
+  loadAdminReviews();
+};
