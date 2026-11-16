@@ -542,3 +542,6 @@ nav b.brand-logo small {
   left: 70px !important;
   transform: none !important;
 }
+nav b.brand-logo small {
+  display: none !important;
+}
