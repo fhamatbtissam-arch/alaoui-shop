@@ -585,3 +585,15 @@ nav b.brand-logo span {
 nav b.brand-logo small {
   display: none !important;
 }
+nav b.brand-logo {
+  font-family: Georgia, serif !important;
+  font-size: 27px !important;
+  font-weight: 900 !important;
+  letter-spacing: 1.5px !important;
+  color: #ffffff !important;
+}
+
+nav b.brand-logo span {
+  color: #D7B56D !important;
+  font-weight: 900 !important;
+}
