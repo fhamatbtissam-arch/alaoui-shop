@@ -494,3 +494,8 @@ main section p {
 #reviewsSummary #reviewsCount {
   font-size: 14px;
 }
+.hero {
+  background-image: linear-gradient(90deg,#102b20e8,#102b2070), url('72173.jpg');
+  background-position: center;
+  background-size: cover;
+}
