@@ -529,3 +529,6 @@ nav b.brand-logo small {
   text-transform: uppercase;
   text-align: center;
 }
+.hero-subtitle {
+  transform: translateX(15px);
+}
