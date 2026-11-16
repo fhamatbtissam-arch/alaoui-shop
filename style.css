@@ -563,3 +563,9 @@ nav b.brand-logo small {
   color: #D7B56D !important;
   font-weight: 800 !important;
 }
+main > section:first-child > small {
+  display: block;
+  font-size: 32px !important;
+  color: #D7B56D !important;
+  font-weight: 800 !important;
+}
