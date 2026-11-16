@@ -545,3 +545,12 @@ nav b.brand-logo small {
 nav b.brand-logo small {
   display: none !important;
 }
+.hero h1 {
+  font-size: 48px !important;
+  color: #D7B56D !important;
+  font-weight: 800 !important;
+}
+
+.hero h1 em {
+  color: #D7B56D !important;
+}
