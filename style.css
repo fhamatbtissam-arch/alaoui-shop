@@ -474,3 +474,23 @@ main section p {
   line-height: 1.8;
   color: #766b59;
 }
+/* نجوم التقييم بحجم صغير وأنيق */
+#reviewsList .review-card p:first-of-type {
+  color: #d5a323;
+  font-size: 14px;
+  line-height: 1.4;
+  letter-spacing: 1px;
+  margin: 6px 14px;
+}
+
+#reviewsSummary h3 {
+  font-size: 18px;
+}
+
+#reviewsSummary #reviewsAverage {
+  font-size: 23px !important;
+}
+
+#reviewsSummary #reviewsCount {
+  font-size: 14px;
+}
