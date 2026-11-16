@@ -537,3 +537,8 @@ nav b.brand-logo small {
   left: 25px !important;
   transform: none !important;
 }
+.hero .hero-subtitle {
+  position: relative !important;
+  left: 70px !important;
+  transform: none !important;
+}
