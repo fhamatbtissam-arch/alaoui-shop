@@ -569,3 +569,19 @@ main > section:first-child > small {
   color: #D7B56D !important;
   font-weight: 800 !important;
 }
+nav b.brand-logo {
+  font-family: Georgia, serif !important;
+  font-size: 25px !important;
+  font-weight: 900 !important;
+  letter-spacing: 1px !important;
+  color: #ffffff !important;
+}
+
+nav b.brand-logo span {
+  color: #D7B56D !important;
+  font-weight: 900 !important;
+}
+
+nav b.brand-logo small {
+  display: none !important;
+}
