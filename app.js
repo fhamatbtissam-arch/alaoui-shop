@@ -176,13 +176,16 @@ document.addEventListener("click", function (e) {
 });
 
 run();
+
 // ===============================
-// تقييمات الزبناء
+// تقييمات الزبناء والمعدل العام
 // ===============================
 
 const reviewForm = document.getElementById("reviewForm");
 const reviewsList = document.getElementById("reviewsList");
 const reviewMessage = document.getElementById("reviewMessage");
+const reviewsAverage = document.getElementById("reviewsAverage");
+const reviewsCount = document.getElementById("reviewsCount");
 
 function reviewEscape(value) {
   return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -195,7 +198,7 @@ function reviewEscape(value) {
 }
 
 async function loadReviews() {
-  if (!reviewsList) return;
+  if (!reviewsList || !db) return;
 
   reviewsList.textContent = "جاري تحميل التقييمات...";
 
@@ -207,13 +210,41 @@ async function loadReviews() {
 
   if (error) {
     reviewsList.textContent = "تعذر تحميل التقييمات.";
+
+    if (reviewsAverage) reviewsAverage.textContent = "-- / 5";
+    if (reviewsCount) reviewsCount.textContent = "تعذر حساب التقييمات";
+
     return;
   }
 
-  reviewsList.innerHTML = (data || []).map(review => `
+  const reviews = data || [];
+
+  // حساب المعدل العام
+  if (reviews.length > 0) {
+    const total = reviews.reduce(
+      (sum, review) => sum + Number(review.rating || 0), 0
+    );
+
+    const average = total / reviews.length;
+
+    if (reviewsAverage) {
+      reviewsAverage.textContent = average.toFixed(1) + " / 5";
+    }
+
+    if (reviewsCount) {
+      reviewsCount.textContent =
+        reviews.length + " تقييم منشور";
+    }
+  } else {
+    if (reviewsAverage) reviewsAverage.textContent = "-- / 5";
+    if (reviewsCount) reviewsCount.textContent = "لا توجد تقييمات منشورة بعد";
+  }
+
+  // عرض التقييمات
+  reviewsList.innerHTML = reviews.map(review => `
     <article class="review-card">
       <h3>${reviewEscape(review.customer_name)}</h3>
-      <p>${"⭐".repeat(review.rating)}</p>
+      <p>${"⭐".repeat(Number(review.rating))}</p>
       <p>${reviewEscape(review.comment)}</p>
     </article>
   `).join("") || "<p>كون أول واحد يشارك رأيو معنا!</p>";
