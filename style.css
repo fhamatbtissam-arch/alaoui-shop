@@ -597,3 +597,11 @@ nav b.brand-logo span {
   color: #D7B56D !important;
   font-weight: 900 !important;
 }
+/* تنظيم أزرار التواصل */
+#contact .btn {
+  display: block;
+  width: min(100%, 420px);
+  box-sizing: border-box;
+  margin: 12px auto;
+  text-align: center;
+}
