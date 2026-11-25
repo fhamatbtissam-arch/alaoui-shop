@@ -34,7 +34,15 @@ function productCard(p, orders) {
 
   return `
     <article>
-      ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}">` : ""}
+      ${p.image_url ? `
+        <img
+          class="menu-photo"
+          src="${esc(p.image_url)}"
+          alt="${esc(p.name)}"
+          loading="lazy"
+          style="cursor:zoom-in"
+        >
+      ` : ""}
       <h3>${esc(p.name)}</h3>
       <p>${esc(p.description)}</p>
       <strong>${esc(p.price)}</strong>
@@ -46,6 +54,84 @@ function productCard(p, orders) {
     </article>
   `;
 }
+
+// فتح الصور مكبرة داخل الموقع
+function showImageViewer(src, alt = "صورة") {
+  if (!src) return;
+
+  let viewer = document.getElementById("imageViewer");
+
+  if (!viewer) {
+    viewer = document.createElement("div");
+    viewer.id = "imageViewer";
+
+    viewer.style.cssText = `
+      position:fixed;
+      inset:0;
+      z-index:99999;
+      background:rgba(0,0,0,0.92);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    `;
+
+    viewer.innerHTML = `
+      <button
+        type="button"
+        id="closeImageViewer"
+        aria-label="إغلاق الصورة"
+        style="
+          position:absolute;
+          top:15px;
+          right:18px;
+          width:45px;
+          height:45px;
+          border:0;
+          border-radius:50%;
+          background:#c9a34a;
+          color:#24080d;
+          font-size:30px;
+          cursor:pointer;
+        "
+      >×</button>
+
+      <img
+        id="viewerImage"
+        alt=""
+        style="
+          max-width:100%;
+          max-height:85vh;
+          object-fit:contain;
+          border-radius:8px;
+        "
+      >
+    `;
+
+    document.body.appendChild(viewer);
+
+    viewer.addEventListener("click", function(e) {
+      if (
+        e.target === viewer ||
+        e.target.id === "closeImageViewer"
+      ) {
+        viewer.remove();
+      }
+    });
+  }
+
+  const viewerImage = document.getElementById("viewerImage");
+  viewerImage.src = src;
+  viewerImage.alt = alt;
+
+  document.getElementById("closeImageViewer").focus();
+}
+
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape") {
+    document.getElementById("imageViewer")?.remove();
+  }
+});
 
 async function run() {
   const products = document.querySelector("#products");
@@ -148,7 +234,13 @@ async function run() {
       console.error("Gallery error:", galleryResult.error);
     } else if (photos) {
       photos.innerHTML = (galleryResult.data || []).map(p =>
-        `<img src="${esc(p.image_url)}" alt="صورة المحل">`
+        `<img
+          class="gallery-photo"
+          src="${esc(p.image_url)}"
+          alt="صورة المحل"
+          loading="lazy"
+          style="cursor:zoom-in"
+        >`
       ).join("");
     }
 
@@ -166,13 +258,18 @@ async function run() {
   }
 }
 
-// فتح صور المعرض عند الضغط عليها
-document.addEventListener("click", function (e) {
-  const photo = e.target.closest("#photos img");
+// الضغط على صور قائمة الطعام والمعرض
+document.addEventListener("click", function(e) {
+  const photo = e.target.closest(
+    ".menu-photo, "#photos img"
+  );
 
   if (!photo) return;
 
-  window.open(photo.src, "_blank");
+  showImageViewer(
+    photo.currentSrc || photo.src,
+    photo.alt
+  );
 });
 
 run();
@@ -256,9 +353,14 @@ if (reviewForm) {
 
     const button = reviewForm.querySelector('button[type="submit"]');
     button.disabled = true;
-    reviewMessage.textContent = "جاري إرسال التقييم...";
+
+    if (reviewMessage) {
+      reviewMessage.textContent = "جاري إرسال التقييم...";
+    }
 
     try {
+      if (!db) throw new Error("تعذر الاتصال بقاعدة البيانات.");
+
       const { error } = await db.from("reviews").insert({
         customer_name: document.getElementById("reviewName").value.trim(),
         rating: Number(document.getElementById("reviewRating").value),
@@ -268,13 +370,17 @@ if (reviewForm) {
 
       if (error) throw error;
 
-      reviewMessage.textContent =
-        "شكراً على تقييمك! غادي يظهر من بعد المراجعة ❤️";
+      if (reviewMessage) {
+        reviewMessage.textContent =
+          "شكراً على تقييمك! غادي يظهر من بعد المراجعة ❤️";
+      }
 
       reviewForm.reset();
 
     } catch (error) {
-      reviewMessage.textContent = "وقع خطأ: " + error.message;
+      if (reviewMessage) {
+        reviewMessage.textContent = "وقع خطأ: " + error.message;
+      }
     } finally {
       button.disabled = false;
     }
