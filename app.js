@@ -28,8 +28,7 @@ function productCard(p, orders) {
     "الثمن: " + (p.price || "");
 
   const orderUrl = orders
-    ? "https://wa.me/" + orders +
-      "?text=" + encodeURIComponent(orderText)
+    ? "https://wa.me/" + orders + "?text=" + encodeURIComponent(orderText)
     : "#";
 
   return `
@@ -55,7 +54,7 @@ function productCard(p, orders) {
   `;
 }
 
-// فتح الصور مكبرة داخل الموقع
+// تكبير الصور داخل الموقع
 function showImageViewer(src, alt = "صورة") {
   if (!src) return;
 
@@ -127,6 +126,7 @@ function showImageViewer(src, alt = "صورة") {
   document.getElementById("closeImageViewer").focus();
 }
 
+// إغلاق الصورة بزر Escape
 document.addEventListener("keydown", function(e) {
   if (e.key === "Escape") {
     document.getElementById("imageViewer")?.remove();
@@ -140,7 +140,7 @@ async function run() {
   const photos = document.querySelector("#photos");
 
   if (!db) {
-    products.textContent = "تعذر الاتصال بقاعدة البيانات.";
+    if (products) products.textContent = "تعذر الاتصال بقاعدة البيانات.";
     if (drinksProducts) drinksProducts.textContent = "تعذر الاتصال بقاعدة البيانات.";
     if (storeProducts) storeProducts.textContent = "تعذر الاتصال بقاعدة البيانات.";
     return;
@@ -172,8 +172,10 @@ async function run() {
     if (settingsResult.data) {
       const settings = settingsResult.data;
 
-      document.querySelector("#address").textContent =
-        settings.address || "";
+      const address = document.querySelector("#address");
+      if (address) {
+        address.textContent = settings.address || "";
+      }
 
       const booking = (settings.whatsapp || "").replace(/\D/g, "");
       orders = (settings.phone || "").replace(/\D/g, "");
@@ -201,9 +203,11 @@ async function run() {
     }
 
     // قائمة الطعام
-    products.innerHTML = (productsResult.data || [])
-      .map(p => productCard(p, orders))
-      .join("") || "قائمة الطعام قيد التحضير";
+    if (products) {
+      products.innerHTML = (productsResult.data || [])
+        .map(p => productCard(p, orders))
+        .join("") || "قائمة الطعام قيد التحضير";
+    }
 
     // المشروبات
     if (drinksProducts) {
@@ -234,19 +238,24 @@ async function run() {
       console.error("Gallery error:", galleryResult.error);
     } else if (photos) {
       photos.innerHTML = (galleryResult.data || []).map(p =>
-        `<img
-          class="gallery-photo"
-          src="${esc(p.image_url)}"
-          alt="صورة المحل"
-          loading="lazy"
-          style="cursor:zoom-in"
-        >`
+        p.image_url ? `
+          <img
+            class="gallery-photo"
+            src="${esc(p.image_url)}"
+            alt="صورة المحل"
+            loading="lazy"
+            style="cursor:zoom-in"
+          >
+        ` : ""
       ).join("");
     }
 
   } catch (error) {
     console.error("Shop loading error:", error);
-    products.textContent = "وقع مشكل في تحميل القائمة. المرجو المحاولة لاحقاً.";
+
+    if (products) {
+      products.textContent = "وقع مشكل في تحميل القائمة. المرجو المحاولة لاحقاً.";
+    }
 
     if (drinksProducts) {
       drinksProducts.textContent = "وقع مشكل في تحميل المشروبات.";
@@ -258,11 +267,9 @@ async function run() {
   }
 }
 
-// الضغط على صور قائمة الطعام والمعرض
+// الضغط على صور الطعام والمشروبات والمتجر والمعرض
 document.addEventListener("click", function(e) {
-  const photo = e.target.closest(
-    ".menu-photo, "#photos img"
-  );
+  const photo = e.target.closest(".menu-photo, .gallery-photo, #photos img");
 
   if (!photo) return;
 
@@ -329,8 +336,7 @@ async function loadReviews() {
     }
 
     if (reviewsCount) {
-      reviewsCount.textContent =
-        reviews.length + " تقييم منشور";
+      reviewsCount.textContent = reviews.length + " تقييم منشور";
     }
   } else {
     if (reviewsAverage) reviewsAverage.textContent = "-- / 5";
@@ -352,7 +358,8 @@ if (reviewForm) {
     e.preventDefault();
 
     const button = reviewForm.querySelector('button[type="submit"]');
-    button.disabled = true;
+
+    if (button) button.disabled = true;
 
     if (reviewMessage) {
       reviewMessage.textContent = "جاري إرسال التقييم...";
@@ -382,7 +389,7 @@ if (reviewForm) {
         reviewMessage.textContent = "وقع خطأ: " + error.message;
       }
     } finally {
-      button.disabled = false;
+      if (button) button.disabled = false;
     }
   });
 }
