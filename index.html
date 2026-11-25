@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Alaoui Shop</title>
+  <title>Alaoui-Shop Coffee And Food and Souk</title>
   <link rel="stylesheet" href="style.css">
 
   <style>
@@ -39,8 +39,8 @@
 <header>
   <nav>
     <b class="brand-logo">
-      Alaoui <span>Shop</span>
-      <small>COFFEE AND FOOD</small>
+      Alaoui-Shop
+      <span>Coffee And Food and Souk</span>
     </b>
 
     <a href="#menu">🍽️ قائمة الطعام</a>
@@ -52,7 +52,14 @@
 
   <section class="hero">
     <small>قهوة ومأكولات • نكهة مغربية</small>
-    <h1>مرحبا بكم في<br><em>Alaoui Shop</em></h1>
+
+    <h1>
+      مرحبا بكم في<br>
+      <em>Alaoui-Shop</em>
+      <span style="display:block;font-size:0.55em;margin-top:8px;">
+        Coffee And Food and Souk
+      </span>
+    </h1>
 
     <div class="meta-verification">
       <span>Verified par Meta Console</span>
@@ -103,9 +110,16 @@
   <section id="contact">
     <h2>تواصلوا معنا</h2>
     <p id="address">العنوان سيضاف قريباً</p>
+
     <a class="btn" id="wa" href="#">الحجز عبر واتساب</a>
     <a class="btn" id="orderWa" href="#">الطلب عبر واتساب</a>
-    <a class="btn" href="https://maps.app.goo.gl/nGZQf6sLDXVZeE2TA?g_st=aw" target="_blank" rel="noopener">📍 موقع المحل على Google Maps</a>
+
+    <a class="btn"
+       href="https://maps.app.goo.gl/nGZQf6sLDXVZeE2TA?g_st=aw"
+       target="_blank"
+       rel="noopener">
+      📍 موقع المحل على Google Maps
+    </a>
   </section>
 
   <!-- تقييمات الزبناء -->
@@ -123,6 +137,7 @@
       <input type="text" id="reviewName" placeholder="الاسم ديالك" required>
 
       <label for="reviewRating">التقييم ديالك:</label>
+
       <select id="reviewRating" required>
         <option value="5">⭐⭐⭐⭐⭐ ممتاز</option>
         <option value="4">⭐⭐⭐⭐ جيد جداً</option>
@@ -145,12 +160,17 @@
 </main>
 
 <footer>
-  <p>© 2026 Alaoui Shop Coffee and Food – Tous droits réservés.</p>
+  <p>© 2026 Alaoui-Shop Coffee And Food and Souk – Tous droits réservés.</p>
   <p>جميع الحقوق محفوظة. يُمنع نسخ أو إعادة استعمال محتوى الموقع دون إذن مسبق من المالك.</p>
 </footer>
 
+<!-- تحميل Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- إعدادات Supabase -->
 <script src="config.js"></script>
+
+<!-- كود الموقع -->
 <script src="app.js"></script>
 
 </body>
