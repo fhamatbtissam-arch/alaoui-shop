@@ -6,6 +6,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Alaoui Shop</title>
   <link rel="stylesheet" href="style.css">
+
+  <style>
+    .meta-verification {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      direction: ltr;
+      margin-top: 12px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .meta-verification .blue-check {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 19px;
+      height: 19px;
+      border-radius: 50%;
+      background: #1877F2;
+      color: white;
+      font-size: 13px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 
 <body>
@@ -27,6 +53,12 @@
   <section class="hero">
     <small>قهوة ومأكولات • نكهة مغربية</small>
     <h1>مرحبا بكم في<br><em>Alaoui Shop</em></h1>
+
+    <div class="meta-verification">
+      <span>Verified par Meta Console</span>
+      <span class="blue-check">✓</span>
+    </div>
+
     <p class="hero-subtitle">COFFEE AND FOOD</p>
     <p>جلسة زوينة، مذاق أصيل، ومرحبا بالجميع.</p>
     <a class="btn" href="#menu">اكتشف قائمة الطعام</a>
@@ -117,13 +149,8 @@
   <p>جميع الحقوق محفوظة. يُمنع نسخ أو إعادة استعمال محتوى الموقع دون إذن مسبق من المالك.</p>
 </footer>
 
-<!-- تحميل Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- إعدادات Supabase -->
 <script src="config.js"></script>
-
-<!-- كود الموقع -->
 <script src="app.js"></script>
 
 </body>
